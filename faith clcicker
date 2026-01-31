@@ -1,0 +1,151 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Davisly Hub - Pet Spawner",
+   LoadingTitle = "Loading Davisly Hub...",
+   LoadingSubtitle = "Premium Scripts by daveisly",
+   ConfigurationSaving = {
+      Enabled = false
+   }
+})
+
+local mainTab = Window:CreateTab("Main", 4483362458)
+local settingsTab = Window:CreateTab("Settings", 4483362458)
+
+local guiVisible = true
+local lockedID = "10112609828-35"
+local currentPetName = "Holographic Nugget"
+
+mainTab:CreateSection("Pet Crafting")
+
+mainTab:CreateInput({
+   Name = "Spawn Pet Name",
+   PlaceholderText = "Enter Name...",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      currentPetName = Text
+   end,
+})
+
+mainTab:CreateButton({
+   Name = "Spawn Pet",
+   Callback = function()
+      local args = {
+          "CraftPet",
+          {
+              currentPetName,
+              "Shadow",
+              {
+                  {
+                      Locked = false,
+                      PetID = lockedID,
+                      PetName = currentPetName
+                  },
+                  {
+                      Locked = false,
+                      PetID = lockedID,
+                      PetName = currentPetName
+                  },
+                  {
+                      Locked = false,
+                      PetID = lockedID,
+                      PetName = currentPetName
+                  }
+              }
+          }
+      }
+
+      local success, err = pcall(function()
+          game:GetService("ReplicatedStorage"):WaitForChild("GameClient"):WaitForChild("Events"):WaitForChild("RemoteFunction"):WaitForChild("HandlePet"):InvokeServer(unpack(args))
+      end)
+
+      if success then
+          Rayfield:Notify({Title = "Success", Content = "Crafting " .. currentPetName .. " with ID: " .. lockedID, Duration = 3})
+      else
+          Rayfield:Notify({Title = "Error", Content = "Execution failed.", Duration = 3})
+      end
+   end,
+})
+
+mainTab:CreateSection("Auto Farm")
+
+local autoFarmEnabled = false
+local autoFarmConnection
+
+mainTab:CreateToggle({
+   Name = "Auto Farm Rewards",
+   CurrentValue = false,
+   Callback = function(Value)
+      autoFarmEnabled = Value
+      if autoFarmEnabled then
+         Rayfield:Notify({Title = "Auto Farm", Content = "Auto Farm Started", Duration = 3})
+         autoFarmConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            pcall(function()
+               for i = 1, 50 do
+                  game:GetService("ReplicatedStorage").Modules.EventManagerClient.ServerEvent:FireServer("ClaimReward")
+               end
+            end)
+         end)
+      else
+         if autoFarmConnection then
+            autoFarmConnection:Disconnect()
+            autoFarmConnection = nil
+         end
+         Rayfield:Notify({Title = "Auto Farm", Content = "Auto Farm Stopped", Duration = 3})
+      end
+   end,
+})
+
+settingsTab:CreateSection("GUI Controls")
+
+settingsTab:CreateToggle({
+   Name = "Show GUI",
+   CurrentValue = true,
+   Callback = function(Value)
+      guiVisible = Value
+      if guiVisible then
+         Rayfield:Show()
+         Rayfield:Notify({Title = "GUI", Content = "GUI Shown", Duration = 2})
+      else
+         Rayfield:Hide()
+         Rayfield:Notify({Title = "GUI", Content = "GUI Hidden", Duration = 2})
+      end
+   end,
+})
+
+settingsTab:CreateButton({
+   Name = "Toggle GUI (RightControl)",
+   Callback = function()
+      guiVisible = not guiVisible
+      if guiVisible then
+         Rayfield:Show()
+         Rayfield:Notify({Title = "GUI", Content = "GUI Shown", Duration = 2})
+      else
+         Rayfield:Hide()
+         Rayfield:Notify({Title = "GUI", Content = "GUI Hidden", Duration = 2})
+      end
+   end,
+})
+
+settingsTab:CreateButton({
+   Name = "Destroy GUI",
+   Callback = function()
+      Rayfield:Destroy()
+      Rayfield:Notify({Title = "GUI", Content = "Davisly Hub Closed", Duration = 3})
+   end,
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+   if not gameProcessed and input.KeyCode == Enum.KeyCode.RightControl then
+      guiVisible = not guiVisible
+      if guiVisible then
+         Rayfield:Show()
+         Rayfield:Notify({Title = "GUI", Content = "GUI Shown", Duration = 2})
+      else
+         Rayfield:Hide()
+         Rayfield:Notify({Title = "GUI", Content = "GUI Hidden", Duration = 2})
+      end
+   end
+end)
+
+Rayfield:Notify({Title = "Davisly Hub", Content = "Welcome to Davisly Hub! Press RightControl to toggle GUI.", Duration = 5})
